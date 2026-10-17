@@ -1,0 +1,593 @@
+<!-- s#13 | /root/s/index.html | v 6.2s | u 04/10/2026 • 00:00:00 | xu : ke-24 | note : #noteresponse
+- v4.7 -> v6.2s (UPGRADE FITUR v6.2, TANPA LEARN):
+  * BASIS: sp.html v4.7 stabil dari repo caksup/jec /extka.
+  * TARGET: repo s independen, khusus Exercise + TKA + data siswa utama.
+  * MASUKKAN NON-LEARN DARI v6.2:
+      - viewport-fit=cover untuk safe-area mobile.
+      - shell mobile-first: dvh, no horizontal scroll, tap highlight off, target sentuh aman.
+      - header #hdrFs (fullscreen) + #hdrRef (refresh sistem) + handler additif.
+      - css/s.css cache-bust ?v=14.
+      - bottom nav dipaksa 6 kolom karena Learn dilepas.
+      - realtime CSS v6.2: tambah .rt-participants-card.
+      - realtimePage playing: tambah card peserta #rtParticipants.
+      - script non-Learn di-upgrade ke versi v6.2:
+          dashboard.js?v=13
+          homework.js?v=10
+          s-rt-lobby-vocab.js?v=19
+          s-rt-session.js?v=2
+          s-rt-render.js?v=2
+          realtime.js?v=21
+          result.js?v=11
+          s-devtools.js?v=6
+      - state/login/feedback/info/nilai/profile/riwayat/test tetap mengikuti tag v6.2.
+  * HAPUS / TIDAK DIMUAT:
+      - tombol Learn di bottom nav.
+      - style learn-bridge-css.
+      - window.FL_BRIDGE.
+      - js/fc-materi.js.
+      - semua js/fl/*.
+      - semua referensi FLST/FLS di markup.
+  * TETAP UTUH DARI v4.7:
+      - login, studentApp 6 tab, testPage, resultPage, realtimePage 4 screen,
+        modal & toast, PS & RT state, js/fc.js, js/rwmonitor.js, js/hash.js, js/modal.js.
+  * CATATAN:
+      - File ini sengaja tidak memuat firebase materi karena repo s hanya firebase utama.
+      - Kalau nanti repo s butuh membaca firebase materi untuk fitur non-Learn, tambahkan terpisah.
+- Deploy: timpa s/index.html. Salin juga js/s/* versi v6.2 ke repo s. Hard reload.
+- EXPOSE: window.PS, window.RT. -->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#008069">
+<meta name="application-name" content="JEC Exercise ACT">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="JEC Siswa">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Panel Siswa - Exercise TKA English</title>
+<link rel="icon" href="metadata/favicon.ico" sizes="any">
+<link rel="icon" href="metadata/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="metadata/favicon-96x96.png" type="image/png" sizes="96x96">
+<link rel="apple-touch-icon" href="metadata/apple-touch-icon.png">
+<link rel="manifest" href="metadata/site.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<link href="css/g.css" rel="stylesheet">
+<link href="css/s.css?v=14" rel="stylesheet">
+<link href="css/brand.css" rel="stylesheet">
+<style id="s-shell-css">
+  /* v6.2s student-only shell: mobile-first + nav 6 kolom.
+     ADDITIF; tidak menyentuh rt-*, maupun kartu internal s.css. */
+  html,body{height:100%;}
+  body{overflow-x:hidden;-webkit-tap-highlight-color:transparent;}
+  .login-page{min-height:100vh;min-height:100dvh;}
+  .student-app{min-height:100vh;min-height:100dvh;}
+  .app-header{padding-top:env(safe-area-inset-top);}
+  .menu-toggle{min-width:44px;min-height:44px;}
+  .bottom-nav-tabs{
+    grid-template-columns:repeat(6,1fr);
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  .bn-item{min-height:48px;}
+  #hdrFs,#hdrRef{flex:0 0 auto;}
+</style>
+<style id="rt-inline-css">
+  /* Fondasi CSS Realtime Student */
+  .rt-page{position:fixed;inset:0;background:#f8fafc;z-index:100;overflow-y:auto;display:none;}
+  .rt-page.active{display:block;}
+  .rt-container{max-width:640px;margin:0 auto;padding:1rem;}
+  .rt-hero{background:linear-gradient(135deg,#7c3aed 0%,#5b21b6 100%);color:#fff;border-radius:16px;padding:1.5rem;margin-bottom:1rem;text-align:center;position:relative;}
+  .rt-hero h1{font-size:1.25rem;font-weight:700;margin-bottom:.25rem;}
+  .rt-hero .rt-code{font-size:2rem;font-weight:800;font-family:monospace;letter-spacing:.22em;margin:.75rem 0;background:rgba(255,255,255,.15);padding:.5rem 1rem;border-radius:12px;display:inline-block;}
+  .rt-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:1rem;margin-bottom:1rem;}
+  .rt-input-group{display:flex;gap:.5rem;margin-top:.75rem;}
+  .rt-input-group input{flex:1;}
+  .rt-player-chip{display:flex;align-items:center;gap:.5rem;padding:.4375rem .625rem;background:#f8fafc;border:1px solid #eef2f6;border-radius:8px;font-size:.8125rem;color:#334155;margin-bottom:.3125rem;}
+  .rt-question-text{font-size:1.125rem;line-height:1.6;margin:1rem 0;font-weight:500;}
+  .rt-option{padding:.875rem 1rem;background:#fff;border:2px solid #e2e8f0;border-radius:10px;margin-bottom:.5rem;cursor:pointer;transition:all .15s;font-size:.9375rem;}
+  .rt-option:hover{border-color:#7c3aed;background:#f5f3ff;}
+  .rt-option.selected{border-color:#7c3aed;background:#ede9fe;font-weight:600;}
+  .rt-option.correct{border-color:#10b981;background:#d1fae5;}
+  .rt-option.wrong{border-color:#ef4444;background:#fee2e2;}
+  .rt-leaderboard-row{display:flex;justify-content:space-between;align-items:center;padding:.5rem .75rem;border-bottom:1px solid #f1f5f9;font-size:.875rem;}
+  .rt-leaderboard-row.me{background:#fef3c7;font-weight:700;}
+  .rt-leaderboard-row .rt-rank{font-weight:700;color:#7c3aed;width:2rem;}
+  .rt-leaderboard-row .rt-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .rt-leaderboard-row .rt-score{font-weight:700;color:#047857;min-width:3rem;text-align:right;}
+  .rt-status-pill{display:inline-flex;align-items:center;gap:.375rem;padding:.375rem .75rem;border-radius:50px;font-size:.75rem;font-weight:700;}
+  .rt-status-pill.lobby{background:#ede9fe;color:#5b21b6;}
+  .rt-status-pill.playing{background:#fee2e2;color:#991b1b;animation:rt-pulse 1.5s infinite;}
+  .rt-status-pill.finished{background:#e2e8f0;color:#475569;}
+  @keyframes rt-pulse{0%,100%{opacity:1;}50%{opacity:.6;}}
+  .rt-timer-big{font-size:2rem;font-weight:800;font-family:monospace;text-align:center;color:#fff;margin:.5rem 0;}
+  .rt-timer-big.urgent{color:#fecaca;}
+
+  /* radar online indicator */
+  .rt-online-radar{display:inline-block;width:10px;height:10px;background:#10b981;
+    border-radius:50%;margin-right:.375rem;vertical-align:middle;
+    animation:rtRadarPulse 2s ease-in-out infinite;}
+  .rt-online-radar.offline{background:#ef4444;animation:none;}
+  @keyframes rtRadarPulse{
+    0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.7);}
+    50%{box-shadow:0 0 0 6px rgba(16,185,129,0);}
+  }
+
+  /* head action buttons di hero */
+  .rt-head-actions{display:flex;gap:.375rem;align-items:center;}
+  .rt-head-btn{background:rgba(255,255,255,.18);border:none;color:#fff;
+    padding:.375rem;border-radius:8px;cursor:pointer;display:inline-flex;
+    align-items:center;justify-content:center;transition:background .15s;
+    width:34px;height:34px;}
+  .rt-head-btn:hover{background:rgba(255,255,255,.3);}
+  .rt-head-btn .material-icons{font-size:18px;}
+
+  /* kosakata melayang di lobby */
+  .rt-vocab-bg{position:fixed;top:0;left:0;width:100%;height:100%;overflow:hidden;
+    pointer-events:none;z-index:0;}
+  .rt-vocab-item{position:absolute;top:-40px;font-weight:600;font-size:.9375rem;
+    color:#a78bfa;opacity:.45;white-space:nowrap;
+    animation:rtVocabFloat var(--rt-dur, 22s) linear var(--rt-delay, 0s) infinite;
+    text-shadow:0 1px 3px rgba(255,255,255,.8);}
+  .rt-vocab-item .rt-pos{font-size:.625rem;font-weight:700;color:#fff;
+    background:#8b5cf6;padding:1px 5px;border-radius:50px;margin-left:.25rem;
+    text-transform:uppercase;letter-spacing:.03em;}
+  @keyframes rtVocabFloat{
+    0%{transform:translateY(-10vh) rotate(-3deg);opacity:0;}
+    10%{opacity:.6;}
+    90%{opacity:.6;}
+    100%{transform:translateY(105vh) rotate(3deg);opacity:0;}
+  }
+
+  /* Sticky hero saat playing */
+  #rtPlayingScreen .rt-hero{position:sticky;top:0;z-index:20;
+    border-radius:0 0 14px 14px;padding:1rem;margin:-1rem -1rem 1rem;
+    display:flex;align-items:center;justify-content:space-between;gap:.625rem;
+    text-align:left;}
+  #rtPlayingScreen .rt-hero .rt-timer-big{font-size:1.5rem;margin:0;}
+
+  #rtLobbyScreen .rt-container,
+  #rtPlayingScreen .rt-container{position:relative;z-index:1;}
+
+  /* v6.2: card peserta di bawah leaderboard playing */
+  .rt-participants-card{margin-top:.75rem;}
+  .rt-participants-card strong{display:flex;align-items:center;gap:.375rem;}
+</style>
+</head>
+<body>
+
+<!-- ============================================
+     LOGIN
+     ============================================ -->
+<div id="loginScreen" class="login-page">
+  <div class="login-card">
+    <div class="login-logo">
+      <span class="material-icons">school</span>
+      <h1>Jagat English Course</h1>
+      <p>Exercise TKA English</p>
+    </div>
+    <div class="err" id="loginErr"></div>
+    <form id="loginForm">
+      <div class="form-group">
+        <label class="form-label"><span class="material-icons">badge</span>ID Siswa</label>
+        <input type="text" class="form-control" id="loginId" placeholder="Contoh: 260101" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label"><span class="material-icons">lock</span>PIN</label>
+        <div style="position:relative;">
+          <input type="password" class="form-control" id="loginPin" required style="padding-right:40px;">
+          <button type="button" class="menu-toggle" id="togglePin" style="position:absolute;right:4px;top:50%;transform:translateY(-50%);">
+            <span class="material-icons">visibility_off</span>
+          </button>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary w-full"><span class="material-icons">login</span>Masuk</button>
+    </form>
+    <div class="login-footer">
+      <p>Exercise TKA English &copy; 2026 Jagat Education Center</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================
+     STUDENT APP (bottom nav 6 tab, TANPA LEARN)
+     ============================================ -->
+<div id="studentApp" class="student-app" style="display:none;">
+
+  <header class="app-header" id="sHeader" style="display:none;">
+    <div class="header-brand">
+      <span class="material-icons">school</span>
+      <span class="hb-wrap">
+        <span class="hb-short">JEC</span>
+        <span class="hb-long">Jagat Education Center</span>
+      </span>
+    </div>
+    <div class="header-right">
+      <!-- v6.2s ADDITIF: fullscreen toggle + refresh sistem -->
+      <button type="button" class="menu-toggle" id="hdrFs" title="Layar penuh"><span class="material-icons" id="hdrFsIc">fullscreen</span></button>
+      <button type="button" class="menu-toggle" id="hdrRef" title="Muat ulang sistem"><span class="material-icons">refresh</span></button>
+      <div class="header-user">
+        <span class="material-icons">school</span>
+        <div class="header-user-text">
+          <!-- v4.7: nickname di atas, ID+nama di bawah -->
+          <div class="s-user-nickname" id="sUserNickname"></div>
+          <div class="s-user-idline">
+            <strong id="sUserId">-</strong>
+            <span class="header-name" id="sUserName"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- v4.7: sDateLine flex — jam kiri, status kanan mepet -->
+  <div class="s-date-line" id="sDateLine">
+    <div class="sdl-left">
+      <span class="material-icons">schedule</span>
+      <span id="sClockText">Memuat waktu...</span>
+    </div>
+    <div class="sdl-right">
+      <div class="conn-status" id="connStatus" title="Status koneksi">
+        <div class="conn-indicator">
+          <span class="conn-radar" id="connRadar"></span>
+        </div>
+        <span class="conn-label" id="connLabel">-</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="max-width:800px;margin:0 auto;">
+
+    <div id="page-home" class="tab-page active">
+      <h2 class="section-title"><span class="material-icons">dashboard</span>Overview</h2>
+      <div id="homeOverview"><div class="empty-state"><span class="material-icons">hourglass_empty</span><p>Memuat...</p></div></div>
+
+      <h2 class="section-title"><span class="material-icons" style="color:#2563eb;">assignment_turned_in</span>Assignment (Asesmen/Ulangan)</h2>
+      <div id="assessmentList"><div class="empty-state"><span class="material-icons">hourglass_empty</span><p>Memuat Asesmen...</p></div></div>
+
+      <h3 class="section-title" style="font-size:1rem;"><span class="material-icons" style="color:#f59e0b;">menu_book</span>Homework</h3>
+      <div id="homeNotif"><div class="empty-state"><span class="material-icons">hourglass_empty</span><p>Memuat...</p></div></div>
+
+      <h3 class="section-title" style="font-size:1rem;"><span class="material-icons" style="color:#2563eb;">bolt</span>Live Exercise</h3>
+      <div id="homeSesiList"><div class="empty-state"><span class="material-icons">hourglass_empty</span><p>Memuat...</p></div></div>
+    </div>
+
+    <div id="page-riwayat" class="tab-page">
+      <h2 class="section-title"><span class="material-icons">history</span>Riwayat Sesi</h2>
+      <div id="riwayatList"><div class="empty-state"><span class="material-icons">hourglass_empty</span><p>Memuat...</p></div></div>
+    </div>
+
+    <div id="page-nilai" class="tab-page">
+      <h2 class="section-title"><span class="material-icons">emoji_events</span>Nilai Per Sesi</h2>
+      <div id="nilaiTable"><div class="empty-state"><span class="material-icons">hourglass_empty</span><p>Memuat...</p></div></div>
+    </div>
+
+    <div id="page-feedback" class="tab-page">
+      <div id="feedbackTabContent"><div class="empty-state"><span class="material-icons">hourglass_empty</span><p>Memuat...</p></div></div>
+    </div>
+
+    <div id="page-profile" class="tab-page">
+      <div id="profileTabContent"><div class="empty-state"><span class="material-icons">hourglass_empty</span><p>Memuat...</p></div></div>
+    </div>
+
+    <div id="page-info" class="tab-page">
+      <div id="infoTabContent"><div class="empty-state"><span class="material-icons">hourglass_empty</span><p>Memuat...</p></div></div>
+    </div>
+
+  </div>
+
+  <nav class="bottom-nav-tabs" id="bottomNav">
+    <button class="bn-item active" data-tab="home" onclick="PS.setTab('home')">
+      <span class="material-icons">home</span><span>Home</span>
+    </button>
+    <button class="bn-item" data-tab="riwayat" onclick="PS.setTab('riwayat')">
+      <span class="material-icons">history</span><span>Riwayat</span>
+    </button>
+    <button class="bn-item" data-tab="nilai" onclick="PS.setTab('nilai')">
+      <span class="material-icons">emoji_events</span><span>Nilai</span>
+    </button>
+    <button class="bn-item" data-tab="feedback" onclick="PS.setTab('feedback')">
+      <span class="material-icons">rate_review</span><span>Feedback</span>
+    </button>
+    <button class="bn-item" data-tab="profile" onclick="PS.setTab('profile')">
+      <span class="material-icons">person</span><span>Profile</span>
+    </button>
+    <button class="bn-item" data-tab="info" onclick="PS.setTab('info')">
+      <span class="material-icons">info</span><span>Info</span>
+    </button>
+  </nav>
+</div>
+
+<!-- ============================================
+     TEST PAGE (Live Exercise & Homework)
+     ============================================ -->
+<div id="testPage" class="test-page" style="display:none;">
+  <div class="test-header">
+    <div class="th-left">Soal <span id="curNum">1</span>/<span id="totNum">0</span></div>
+    <div style="display:flex;align-items:center;gap:.5rem;">
+      <div id="violCounter" title="Pelanggaran" style="display:flex;align-items:center;gap:.375rem;padding:.5rem .75rem;background:#f1f5f9;border-radius:8px;font-weight:700;color:#64748b;">
+        <span class="material-icons" style="font-size:18px;">shield</span>
+        <span id="violDisplay">0/3</span>
+      </div>
+      <div class="test-timer" id="testTimer">
+        <span class="material-icons">timer</span>
+        <span id="timerDisplay">00:00</span>
+      </div>
+    </div>
+  </div>
+  <div class="num-strip-row">
+    <div class="num-strip" id="numStrip"></div>
+    <button class="btn btn-secondary btn-sm" onclick="toggleNavPanel()" title="Menu Soal">
+      <span class="material-icons">grid_view</span>
+    </button>
+  </div>
+  <div class="test-body" id="testBody"></div>
+
+  <div class="question-nav-panel" id="questionNavPanel">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;">
+      <strong style="font-size:.9375rem;">Navigasi Soal</strong>
+      <button class="menu-toggle" onclick="toggleNavPanel()"><span class="material-icons">close</span></button>
+    </div>
+    <div class="question-grid-nav" id="questionGridNav"></div>
+    <button class="btn btn-success w-full" onclick="confirmSubmit()">
+      <span class="material-icons">send</span>Kumpulkan
+    </button>
+  </div>
+</div>
+
+<!-- ============================================
+     RESULT PAGE
+     ============================================ -->
+<div id="resultPage" class="result-page" style="display:none;">
+  <div class="result-card">
+    <div class="result-icon" id="resultIcon"><span class="material-icons">emoji_events</span></div>
+    <h2 style="font-size:1.5rem;font-weight:700;">Selesai!</h2>
+    <p style="color:#64748b;">Anda telah menyelesaikan Exercise TKA</p>
+    <div class="result-score" id="resultScore">0</div>
+    <div class="result-details">
+      <div><div class="result-detail-label">Benar</div><div class="result-detail-value" style="color:#10b981;" id="rCorrect">0</div></div>
+      <div><div class="result-detail-label">Salah</div><div class="result-detail-value" style="color:#ef4444;" id="rWrong">0</div></div>
+      <div><div class="result-detail-label">Waktu</div><div class="result-detail-value" id="rTime">0:00</div></div>
+      <div><div class="result-detail-label">Akurasi</div><div class="result-detail-value" style="color:#2563eb;" id="rAcc">0%</div></div>
+    </div>
+    <div style="display:flex;gap:.5rem;flex-direction:column;">
+      <button class="btn btn-secondary" onclick="reviewAnswers()"><span class="material-icons">rate_review</span>Review Jawaban</button>
+      <button class="btn btn-primary" onclick="backToDashboard()"><span class="material-icons">home</span>Kembali</button>
+    </div>
+  </div>
+</div>
+
+<div id="assessmentPage" style="display:none;position:fixed;inset:0;z-index:120;background:#f8fafc;overflow-y:auto;">
+  <div style="max-width:900px;margin:0 auto;padding:1rem;">
+    <div id="assessmentContent"></div>
+  </div>
+</div>
+
+<!-- ============================================
+     REALTIME PAGE (join lobby via ?jec-rt=<code>)
+     Handler: js/s/realtime.js v21 modular
+     ============================================ -->
+<div id="realtimePage" class="rt-page">
+  <div class="rt-container">
+
+    <!-- SCREEN 1: JOIN -->
+    <div id="rtJoinScreen" class="rt-screen">
+      <div class="rt-hero">
+        <span class="material-icons" style="font-size:3rem;">sports_esports</span>
+        <h1>Realtime Exercise</h1>
+        <p>Join via kode dari guru Anda</p>
+      </div>
+      <div class="rt-card">
+        <div class="form-group">
+          <label class="form-label"><span class="material-icons">pin</span>Kode Join</label>
+          <input type="text" class="form-control" id="rtCodeInput" placeholder="JEC-001" style="text-transform:uppercase;font-family:monospace;font-size:1.25rem;letter-spacing:.18em;text-align:center;">
+          <small style="color:#64748b;font-size:.75rem;">Format: JEC-001, JEC-RT001, atau 6-char</small>
+        </div>
+        <div class="form-group" id="rtNameGroup" style="display:none;">
+          <label class="form-label"><span class="material-icons">person</span>Nama Anda</label>
+          <input type="text" class="form-control" id="rtNameInput" placeholder="Nama lengkap" maxlength="50">
+        </div>
+        <button class="btn btn-primary w-full" onclick="window.rtJoinLobby && window.rtJoinLobby()">
+          <span class="material-icons">login</span>Masuk Lobby
+        </button>
+        <div id="rtJoinError" style="display:none;margin-top:.75rem;padding:.5rem .75rem;background:#fee2e2;border-radius:8px;font-size:.8125rem;color:#991b1b;"></div>
+      </div>
+    </div>
+
+    <!-- SCREEN 2: LOBBY -->
+    <div id="rtLobbyScreen" class="rt-screen" style="display:none;">
+      <div class="rt-hero" id="rtLobbyHero">
+        <span class="rt-status-pill lobby"><span class="material-icons" style="font-size:14px;">hourglass_empty</span>LOBBY</span>
+        <h1 id="rtSessionName">Sesi Realtime</h1>
+        <p>Menunggu guru memulai sesi...</p>
+        <div class="rt-code" id="rtCodeDisplay">------</div>
+      </div>
+      <div class="rt-card">
+        <strong>Pemain di lobby:</strong>
+        <div id="rtPlayerList" style="margin-top:.5rem;min-height:2rem;">
+          <div class="empty-state" style="padding:.5rem;"><p style="font-size:.8125rem;">Belum ada pemain lain</p></div>
+        </div>
+      </div>
+      <div class="rt-card">
+        <strong style="display:flex;align-items:center;gap:.375rem;">
+          <span class="material-icons" style="font-size:18px;">leaderboard</span>Leaderboard
+        </strong>
+        <div id="rtLeaderboard" style="margin-top:.5rem;">
+          <div class="empty-state" style="padding:.5rem;"><p style="font-size:.8125rem;">Belum ada skor</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 3: PLAYING -->
+    <div id="rtPlayingScreen" class="rt-screen" style="display:none;">
+      <div class="rt-hero" id="rtPlayingHero">
+        <div style="display:flex;flex-direction:column;gap:.125rem;flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:.25rem;font-size:.75rem;opacity:.9;">
+            <span class="rt-online-radar" title="Koneksi aktif"></span>
+            <span>Soal <b id="rtQNum">1</b> / <b id="rtQTotal">0</b></span>
+          </div>
+          <div id="rtTimerBig" class="rt-timer-big">00:00</div>
+        </div>
+      </div>
+      <div class="rt-card">
+        <div id="rtQuestionType" style="margin-bottom:.5rem;"></div>
+        <div class="rt-question-text" id="rtQuestionText">Memuat soal...</div>
+        <div id="rtOptions"></div>
+        <div id="rtSubmitArea" style="margin-top:.75rem;display:none;">
+          <button class="btn btn-primary w-full" onclick="window.rtSubmitAnswer && window.rtSubmitAnswer()">
+            <span class="material-icons">send</span>Kirim Jawaban
+          </button>
+        </div>
+        <div id="rtAnswerFeedback" style="display:none;margin-top:.75rem;padding:.75rem;border-radius:8px;font-size:.875rem;"></div>
+      </div>
+      <div class="rt-card">
+        <strong style="display:flex;align-items:center;gap:.375rem;">
+          <span class="material-icons" style="font-size:18px;">leaderboard</span>Leaderboard
+        </strong>
+        <div id="rtLeaderboardPlaying" style="margin-top:.5rem;">
+          <div class="empty-state" style="padding:.5rem;"><p style="font-size:.8125rem;">Belum ada skor</p></div>
+        </div>
+      </div>
+      <!-- v6.2: CARD PESERTA di bawah leaderboard -->
+      <div class="rt-card rt-participants-card">
+        <strong>
+          <span class="material-icons" style="font-size:18px;color:#6d28d9;">groups</span>Peserta
+        </strong>
+        <div id="rtParticipants" style="margin-top:.5rem;">
+          <div class="empty-state" style="padding:.5rem;"><p style="font-size:.8125rem;">Memuat peserta...</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 4: FINISHED -->
+    <div id="rtFinishedScreen" class="rt-screen" style="display:none;">
+      <div class="rt-hero" style="background:linear-gradient(135deg,#10b981,#059669);">
+        <span class="material-icons" style="font-size:4rem;">emoji_events</span>
+        <h1>Sesi Selesai!</h1>
+        <p>Terima kasih sudah berpartisipasi</p>
+      </div>
+      <div class="rt-card" style="text-align:center;">
+        <div style="font-size:.875rem;color:#64748b;">Posisi akhir Anda</div>
+        <div id="rtFinalRank" style="font-size:3rem;font-weight:800;color:#7c3aed;margin:.5rem 0;">-</div>
+        <div style="display:flex;justify-content:space-around;margin-top:1rem;padding-top:1rem;border-top:1px solid #e2e8f0;">
+          <div>
+            <div style="font-size:.75rem;color:#64748b;">Skor</div>
+            <div id="rtFinalScore" style="font-size:1.5rem;font-weight:700;color:#047857;">0</div>
+          </div>
+          <div>
+            <div style="font-size:.75rem;color:#64748b;">Benar</div>
+            <div id="rtFinalCorrect" style="font-size:1.5rem;font-weight:700;color:#10b981;">0</div>
+          </div>
+        </div>
+      </div>
+      <div class="rt-card">
+        <strong>Podium Final:</strong>
+        <div id="rtFinalLeaderboard" style="margin-top:.5rem;"></div>
+      </div>
+      <button class="btn btn-primary w-full" onclick="window.rtBackToHome && window.rtBackToHome()">
+        <span class="material-icons">home</span>Kembali ke Dashboard
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- Modal & Toast -->
+<div id="modalOverlay" class="modal-overlay" style="display:none;">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span class="material-icons modal-icon" id="modalIcon">info</span>
+      <h3 class="modal-title" id="modalTitle">Info</h3>
+    </div>
+    <div class="modal-content"><div class="modal-message" id="modalMsg"></div></div>
+    <div class="modal-actions" id="modalActions"></div>
+  </div>
+</div>
+<div id="toast" class="toast"></div>
+
+<!-- ============================================
+     SCRIPTS
+     ============================================ -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script>
+window.PS = window.PS || {
+  user:null, sessions:[], questions:[], currentSession:null,
+  answers:{}, flagged:new Set(), currentIndex:0, timeRemaining:0,
+  timer:null, startTime:null, tabSwitch:0, blur:0, antiLog:[],
+  settings:{antiCheatEnabled:true,maxTabSwitches:3},
+  attemptId:null, myAttempts:[],
+  activeTab:'home', myProfile:null, myValues:[]
+};
+window.RT = window.RT || {
+  roomCode:null, roomId:null, playerId:null, playerName:null,
+  unsubRoom:null, unsubPlayers:null, unsubAnswers:null, tickTimer:null,
+  watchTimer:null, room:null, players:{}, answers:{}, questions:[],
+  questionsById:{}, questionsLoadedForSession:null,
+  currentQIndex:-999, currentQId:null, myAnswer:null, submitted:false,
+  lastRenderedAnswerKey:'', realtimeParamCode:null, waitLoginTimer:null,
+  online:true
+};
+</script>
+
+<script type="text/javascript" src="js/fc.js"></script>
+<script type="text/javascript" src="js/rwmonitor.js"></script>
+<script type="text/javascript" src="js/hash.js"></script>
+<script type="text/javascript" src="js/modal.js"></script>
+<script type="text/javascript" src="js/s/state.js?v=8"></script>
+<script type="text/javascript" src="js/s/login.js?v=9"></script>
+<script type="text/javascript" src="js/s/dashboard.js?v=15"></script>
+<script type="text/javascript" src="js/s/feedback.js?v=7"></script>
+<script type="text/javascript" src="js/s/question-media.js?v=2"></script>
+<script type="text/javascript" src="js/s/homework.js?v=12"></script>
+<script type="text/javascript" src="js/s/info.js?v=9"></script>
+<script type="text/javascript" src="js/s/nilai.js?v=7"></script>
+<script type="text/javascript" src="js/s/profile.js?v=7"></script>
+<!-- v6.2: realtime modular -->
+<script type="text/javascript" src="js/s/s-rt-lobby-vocab.js?v=19"></script>
+<script type="text/javascript" src="js/s/s-rt-session.js?v=2"></script>
+<script type="text/javascript" src="js/s/s-rt-render.js?v=3"></script>
+<script type="text/javascript" src="js/s/realtime.js?v=23"></script>
+<script type="text/javascript" src="js/s/result.js?v=12"></script>
+<script type="text/javascript" src="js/s/riwayat.js?v=9"></script>
+<script type="text/javascript" src="js/s/test.js?v=10"></script>
+<script type="text/javascript" src="js/s/asesmen.js?v=2"></script>
+<script type="text/javascript" src="js/s/s-devtools.js?v=6"></script>
+
+<!-- v6.2s ADDITIF: handler header — fullscreen toggle + refresh sistem -->
+<script>
+(function(){
+  'use strict';
+  function fsOn(){ return !!(document.fullscreenElement||document.webkitFullscreenElement||document.msFullscreenElement); }
+  function enterFs(){ var d=document, e=d.documentElement; try{ (e.requestFullscreen||e.webkitRequestFullscreen||e.msRequestFullscreen||function(){}).call(e); }catch(_){} }
+  function exitFs(){ try{ (document.exitFullscreen||document.webkitExitFullscreen||document.msExitFullscreen||function(){}).call(document); }catch(_){} }
+  function syncIcon(){ var i=document.getElementById('hdrFsIc'); if(i) i.textContent = fsOn()?'fullscreen_exit':'fullscreen'; }
+  function bind(){
+    var b=document.getElementById('hdrFs'); if(b) b.addEventListener('click', function(){ fsOn()?exitFs():enterFs(); setTimeout(syncIcon,60); });
+    var r=document.getElementById('hdrRef'); if(r) r.addEventListener('click', function(){
+      try{ if(window.FLS&&typeof FLS.clearCache==='function') FLS.clearCache(); }catch(_){}
+      location.reload();
+    });
+    document.addEventListener('fullscreenchange', syncIcon);
+    document.addEventListener('webkitfullscreenchange', syncIcon);
+    document.addEventListener('msfullscreenchange', syncIcon);
+    syncIcon();
+  }
+  if (document.readyState==='loading') document.addEventListener('DOMContentLoaded', bind); else bind();
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator && window.isSecureContext &&
+    (location.protocol === 'https:' || location.hostname === 'localhost' ||
+     location.hostname === '127.0.0.1' || location.hostname === '[::1]')) {
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('sw.js', {scope:'./'}).catch(function(error){
+      console.error('[PWA siswa] Service worker gagal didaftarkan:', error);
+    });
+  });
+}
+</script>
+</body>
+</html>
