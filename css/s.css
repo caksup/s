@@ -1,0 +1,775 @@
+/* #05 | /root/css/s.css | v 2.11 | u 19/09/2026 • 07:00:00 | xu : ke-7 | note : #noteresponse
+- v2.10 -> v2.11 (cache-bust ?v=14 di sp.html v5.0):
+  * NAV 7 KOLOM PERMANEN: .bottom-nav-tabs grid repeat(7,1fr) (tombol Learn
+    sudah permanen di markup sp.html v5.0; bridge inline di sp.html jadi
+    redundan tapi tidak konflik).
+  * STYLE LENGKAP MODUL LEARN (namespace .ln-*): overlay .ln-page, header
+    .ln-hd, bottom-nav internal 3 tab .ln-bnav, chips filter, kartu, baris
+    materi + status pill (locked/wait/open/done), badge, theory section,
+    words tap, quiz option, tombol, textarea writing, catatan offline,
+    jadwal pertemuan.
+  * STYLE GAME FUN LEARN: grid game .ln-game, Connect (.cn-*), Drag&Drop
+    (.dnd-*), True/False (.tf-*), skor (.ln-score).
+  * SEMUA RULE v2.5 s/d v2.10 DIPERTAHANKAN VERBATIM (tidak ada yang
+    dihapus/diubah): palette WA, session/test/result/realtime, nav 6->7,
+    modal/toast/empty/badge/button override, header v4.7, fix v2.10.
+- EXPOSE: class lama + class baru .ln-* / .cn-* / .dnd-* / .tf-*. */
+
+/* =========================================================================
+   ROOT VARIABLES (WhatsApp palette)
+   ========================================================================= */
+:root{
+  --wa-primary:#00A884;
+  --wa-primary-dark:#008069;
+  --wa-primary-light:#25D366;
+  --wa-primary-soft:#E7F7F2;
+  --wa-bg-app:#F0F2F5;
+  --wa-bg-chat:#EFEAE2;
+  --wa-bg-card:#FFFFFF;
+  --wa-border:#E9EDEF;
+  --wa-text:#111B21;
+  --wa-text-secondary:#667781;
+  --wa-icon-muted:#54656F;
+  --wa-success:#25D366;
+  --wa-warning:#FFA726;
+  --wa-danger:#F15C6D;
+  --wa-info:#34B7F1;
+}
+
+.student-app{min-height:100vh;padding-top:56px;background:var(--wa-bg-app);color:var(--wa-text)}
+
+/* =========================================================================
+   PROFILE CARD (WhatsApp green gradient)
+   ========================================================================= */
+.profile-card{background:linear-gradient(135deg,#00A884 0%,#008069 100%);border-radius:20px;color:#fff;padding:1.25rem;margin-bottom:1rem;position:relative;overflow:hidden;box-shadow:0 4px 16px rgba(0,168,132,.25)}
+.profile-row{display:flex;align-items:center;gap:1rem;position:relative}
+.profile-avatar{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;border:2px solid rgba(255,255,255,.3)}
+.profile-name{font-size:1.125rem;font-weight:700}
+.profile-id{font-size:.8125rem;opacity:.9;font-family:monospace}
+.profile-batch{display:inline-flex;align-items:center;gap:.25rem;background:rgba(255,255,255,.2);padding:.25rem .625rem;border-radius:50px;font-size:.75rem;margin-top:.375rem}
+.profile-actions{display:flex;gap:.5rem;margin-top:1rem;position:relative}
+.profile-actions .btn{background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:20px}
+.profile-actions .btn:hover{background:rgba(255,255,255,.3)}
+
+/* =========================================================================
+   SESSION LIST (WhatsApp chat-list style)
+   ========================================================================= */
+.session-item{background:var(--wa-bg-card);border-radius:14px;border:1px solid var(--wa-border);padding:1rem;display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin-bottom:.625rem;cursor:pointer;transition:all .2s;box-shadow:0 1px 2px rgba(17,27,33,.04)}
+.session-item:hover{box-shadow:0 4px 14px rgba(17,27,33,.08);border-color:var(--wa-primary);transform:translateY(-1px)}
+.session-item.disabled{opacity:.55;cursor:not-allowed;transform:none;box-shadow:none}
+.session-title{font-weight:600;font-size:.9375rem;display:flex;align-items:center;gap:.5rem;color:var(--wa-text)}
+.session-title .material-icons{color:var(--wa-primary)}
+.session-meta{display:flex;gap:.75rem;font-size:.75rem;color:var(--wa-text-secondary);margin-top:.25rem;flex-wrap:wrap}
+.session-meta span{display:flex;align-items:center;gap:.25rem}
+.session-meta .material-icons{font-size:14px;color:var(--wa-icon-muted)}
+.session-status{padding:.375rem .875rem;border-radius:50px;font-size:.75rem;font-weight:600;flex-shrink:0}
+.session-status.available{background:var(--wa-primary-soft);color:var(--wa-primary-dark)}
+.session-status.locked{background:#F0F2F5;color:var(--wa-text-secondary)}
+.session-status.completed{background:#DCF8C6;color:#1D6F42}
+.session-status.expired{background:#FFE5E5;color:#C62828}
+
+/* =========================================================================
+   TEST PAGE
+   ========================================================================= */
+.test-page{min-height:100vh;background:var(--wa-bg-app);padding-bottom:90px;-webkit-user-select:none;user-select:none}
+.test-page input{-webkit-user-select:text;user-select:text}
+.test-header{position:sticky;top:0;background:var(--wa-primary);border-bottom:none;padding:.875rem 1rem;z-index:100;display:flex;align-items:center;justify-content:space-between;gap:.75rem;color:#fff;box-shadow:0 2px 8px rgba(0,128,105,.2)}
+.th-left{font-weight:700;font-size:.9375rem;color:#fff}
+.test-timer{display:flex;align-items:center;gap:.5rem;padding:.5rem 1rem;background:rgba(255,255,255,.18);border-radius:20px;font-weight:700;color:#fff}
+.test-timer.warning{background:rgba(255,255,255,.25);color:#fff;animation:pulse 1s infinite}
+.test-timer .material-icons{font-size:20px}
+
+.num-strip-row{position:sticky;top:57px;background:#fff;border-bottom:1px solid var(--wa-border);padding:.5rem 1rem;display:flex;align-items:center;gap:.5rem;z-index:99}
+.num-strip{display:flex;gap:.375rem;overflow-x:auto;flex:1;scrollbar-width:none}
+.num-strip::-webkit-scrollbar{display:none}
+.num-dot{flex:0 0 auto;width:34px;height:34px;border-radius:50%;border:2px solid var(--wa-border);background:#fff;font-weight:700;font-size:.8125rem;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--wa-text);transition:all .15s}
+.num-dot.answered{background:var(--wa-primary);border-color:var(--wa-primary);color:#fff}
+.num-dot.current{background:var(--wa-primary-dark);border-color:var(--wa-primary-dark);color:#fff;box-shadow:0 0 0 3px rgba(0,168,132,.2)}
+
+.question-card{background:#fff;border-radius:16px;border:1px solid var(--wa-border);padding:1.25rem;margin:1rem;box-shadow:0 1px 3px rgba(17,27,33,.04)}
+.q-head{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:1rem}
+.q-head-left{font-weight:700;font-size:.875rem;display:flex;align-items:center;gap:.5rem;color:var(--wa-text)}
+.q-ctrl{display:flex;gap:.375rem}
+.q-ctrl button{width:34px;height:34px;border:1px solid var(--wa-border);background:#fff;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--wa-icon-muted);transition:all .15s}
+.q-ctrl button:hover{border-color:var(--wa-primary);color:var(--wa-primary);background:var(--wa-primary-soft)}
+.question-text{line-height:1.7;margin-bottom:1.25rem;white-space:pre-wrap;color:var(--wa-text)}
+
+.options-list{display:grid;gap:.625rem}
+.option-item{display:flex;align-items:flex-start;gap:.75rem;padding:1rem;border:2px solid var(--wa-border);border-radius:14px;cursor:pointer;transition:all .15s;background:#fff}
+.option-item.selected{border-color:var(--wa-primary);background:var(--wa-primary-soft)}
+.option-label{width:32px;height:32px;border-radius:50%;background:#F0F2F5;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.875rem;flex-shrink:0;color:var(--wa-text)}
+.option-item.selected .option-label{background:var(--wa-primary);color:#fff}
+.option-text{flex:1;line-height:1.6;padding-top:.25rem;color:var(--wa-text)}
+
+.statement-list{display:grid;gap:.75rem}
+.statement-item{padding:1rem;border:2px solid var(--wa-border);border-radius:14px;background:#fff}
+.statement-text{margin-bottom:.75rem;line-height:1.6;color:var(--wa-text)}
+.statement-options{display:flex;gap:.5rem}
+.statement-btn{flex:1;padding:.625rem;border:2px solid var(--wa-border);background:#fff;border-radius:20px;cursor:pointer;font-weight:600;color:var(--wa-text);transition:all .15s}
+.statement-btn.selected{border-color:var(--wa-primary);background:var(--wa-primary);color:#fff}
+
+.answer-input{width:100%;padding:1rem;border:2px solid var(--wa-border);border-radius:14px;font-size:1rem;font-family:inherit;background:#fff;color:var(--wa-text)}
+.answer-input:focus{outline:none;border-color:var(--wa-primary);box-shadow:0 0 0 3px rgba(0,168,132,.15)}
+
+.bottom-nav{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--wa-border);padding:.75rem 1rem;display:flex;gap:.5rem;z-index:100;box-shadow:0 -2px 10px rgba(17,27,33,.05)}
+.bottom-nav .btn{flex:1;border-radius:24px}
+
+.question-nav-panel{position:fixed;right:0;top:56px;bottom:0;width:280px;background:#fff;border-left:1px solid var(--wa-border);padding:1rem;overflow-y:auto;transform:translateX(100%);transition:transform .3s;z-index:120;box-shadow:-4px 0 16px rgba(17,27,33,.08)}
+.question-nav-panel.active{transform:translateX(0)}
+.question-grid-nav{display:grid;grid-template-columns:repeat(5,1fr);gap:.5rem;margin-bottom:1rem}
+.q-nav-btn{aspect-ratio:1;border:2px solid var(--wa-border);background:#fff;border-radius:10px;cursor:pointer;font-weight:700;position:relative;color:var(--wa-text);transition:all .15s}
+.q-nav-btn.current{background:var(--wa-primary-dark);border-color:var(--wa-primary-dark);color:#fff}
+.q-nav-btn.answered{background:var(--wa-primary);border-color:var(--wa-primary);color:#fff}
+
+/* =========================================================================
+   RESULT PAGE (WhatsApp success card)
+   ========================================================================= */
+.result-page{min-height:100vh;padding-top:56px;background:var(--wa-bg-app)}
+.result-card{max-width:500px;margin:2rem auto;background:#fff;border-radius:20px;padding:2rem;text-align:center;border:1px solid var(--wa-border);box-shadow:0 4px 20px rgba(17,27,33,.06)}
+.result-icon{width:88px;height:88px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:42px;margin:0 auto 1.5rem;background:var(--wa-primary-soft);color:var(--wa-primary);border:3px solid var(--wa-primary)}
+.result-score{font-size:3rem;font-weight:700;color:var(--wa-primary);margin:.5rem 0}
+.result-details{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;margin:1.5rem 0;padding:1.5rem;background:var(--wa-bg-app);border-radius:14px}
+.result-detail-label{font-size:.75rem;color:var(--wa-text-secondary)}
+.result-detail-value{font-size:1.25rem;font-weight:700;color:var(--wa-text)}
+
+.anti-cheat-warning{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:var(--wa-danger);color:#fff;padding:.75rem 1.5rem;border-radius:24px;display:flex;align-items:center;gap:.5rem;box-shadow:0 10px 30px rgba(241,92,109,.4);z-index:9999;font-weight:600;max-width:90vw}
+
+.modal-overlay.blur-strong{backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+
+@media (min-width:1024px){.question-nav-panel{transform:translateX(0)}.test-body{margin-right:300px}}
+@media (max-width:767px){.question-card{padding:1rem}.result-details{grid-template-columns:1fr}}
+
+/* =========================================================================
+   v2.3 - Arsitektur Baru Panel Siswa (bottom nav 6 tab) — WA THEME
+   ========================================================================= */
+.student-app{padding-bottom:80px}
+
+.s-date-line{background:#fff;border-bottom:1px solid var(--wa-border);padding:.5rem 1rem;text-align:center;font-size:.8125rem;color:var(--wa-text-secondary);font-family:'Inter',sans-serif;letter-spacing:.3px}
+.s-date-line .material-icons{font-size:14px;vertical-align:-2px;margin-right:.25rem;color:var(--wa-primary)}
+
+.bottom-nav-tabs{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--wa-border);display:grid;grid-template-columns:repeat(6,1fr);z-index:200;padding:.375rem 0 .5rem;padding-bottom:calc(.5rem + env(safe-area-inset-bottom));box-shadow:0 -2px 10px rgba(17,27,33,.05)}
+.bn-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.125rem;padding:.375rem .25rem;background:transparent;border:none;cursor:pointer;color:var(--wa-icon-muted);font-size:.625rem;font-weight:600;font-family:inherit;transition:color .15s;position:relative}
+.bn-item .material-icons{font-size:22px}
+.bn-item.active{color:var(--wa-primary)}
+.bn-item.active::before{content:'';position:absolute;top:0;left:25%;right:25%;height:3px;background:var(--wa-primary);border-radius:0 0 3px 3px}
+.bn-item:active{transform:scale(.95)}
+
+.tab-page{display:none;padding:1rem;animation:fadeTab .25s ease}
+.tab-page.active{display:block}
+@keyframes fadeTab{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+.section-title{display:flex;align-items:center;gap:.5rem;font-size:1rem;font-weight:700;color:var(--wa-text);margin:1.25rem 0 .75rem}
+.section-title .material-icons{color:var(--wa-primary);font-size:22px}
+.section-title:first-child{margin-top:0}
+
+.mini-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.625rem;margin-bottom:.5rem}
+.mini-card{background:#fff;border:1px solid var(--wa-border);border-radius:16px;padding:.875rem .625rem;text-align:center;position:relative;overflow:hidden;transition:transform .15s;box-shadow:0 1px 3px rgba(17,27,33,.04)}
+.mini-card:active{transform:scale(.97)}
+.mini-icon{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto .5rem}
+.mini-icon .material-icons{font-size:20px;color:#fff}
+.mini-label{font-size:.625rem;color:var(--wa-text-secondary);font-weight:600;line-height:1.2;margin-bottom:.25rem;text-transform:uppercase;letter-spacing:.3px}
+.mini-value{font-size:1.5rem;font-weight:700;color:var(--wa-text);line-height:1}
+.mini-card-primary .mini-icon{background:var(--wa-primary)}
+.mini-card-primary .mini-value{color:var(--wa-primary)}
+.mini-card-success .mini-icon{background:#25D366}
+.mini-card-success .mini-value{color:#25D366}
+.mini-card-warning .mini-icon{background:#FFA726}
+.mini-card-warning .mini-value{color:#FFA726}
+
+.notif-header{display:flex;align-items:center;gap:.5rem;padding:.625rem .875rem;background:linear-gradient(135deg,#FFF3CD,#FFE8A1);border-radius:12px 12px 0 0;color:#8A6D3B;font-size:.875rem;font-weight:600}
+.notif-header .material-icons{color:#FFA726}
+.notif-list{background:#fff;border:1px solid var(--wa-border);border-top:none;border-radius:0 0 12px 12px;overflow:hidden}
+.notif-item{display:flex;align-items:center;gap:.75rem;padding:.75rem .875rem;border-bottom:1px solid #F0F2F5}
+.notif-item:last-child{border-bottom:none}
+.notif-main{flex:1;min-width:0}
+.notif-title{font-size:.875rem;font-weight:600;color:var(--wa-text);margin-bottom:.25rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.notif-meta{display:flex;gap:.75rem;font-size:.7rem;color:var(--wa-text-secondary);flex-wrap:wrap}
+.notif-meta span{display:flex;align-items:center;gap:.2rem}
+.notif-meta .material-icons{font-size:12px}
+
+.session-item.resume{border-color:var(--wa-primary);background:linear-gradient(135deg,var(--wa-primary-soft),#fff)}
+.session-item.resume .session-status{background:var(--wa-primary);color:#fff}
+
+.fb-form-card{background:#fff;border:1px solid var(--wa-border);border-radius:16px;padding:1rem;margin-bottom:1rem;box-shadow:0 1px 3px rgba(17,27,33,.04)}
+.fb-radio-label{flex:1;display:flex;align-items:center;justify-content:center;gap:.375rem;padding:.625rem;border:2px solid var(--wa-border);border-radius:20px;cursor:pointer;font-size:.8125rem;font-weight:600;color:var(--wa-text);transition:all .15s}
+.fb-radio-label input[type="radio"]{display:none}
+.fb-radio-label:has(input:checked){border-color:var(--wa-primary);background:var(--wa-primary-soft);color:var(--wa-primary-dark)}
+.fb-radio-label .material-icons{font-size:18px}
+.fb-list-section{margin-top:1.25rem}
+.fb-item{background:#fff;border:1px solid var(--wa-border);border-radius:12px;padding:.75rem .875rem;margin-bottom:.5rem}
+.fb-item-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:.375rem}
+.fb-item-subject{font-size:.875rem;font-weight:600;color:var(--wa-text);margin-bottom:.25rem}
+.fb-item-msg{font-size:.8125rem;color:var(--wa-text-secondary);line-height:1.5;white-space:pre-wrap}
+
+.pf-photo-card{background:linear-gradient(135deg,#00A884 0%,#008069 100%);border-radius:20px;padding:1.5rem 1rem 1rem;text-align:center;color:#fff;margin-bottom:1rem;position:relative;overflow:hidden;box-shadow:0 4px 16px rgba(0,168,132,.25)}
+.pf-photo-card::before{content:'';position:absolute;top:-40px;right:-40px;width:150px;height:150px;background:rgba(255,255,255,.08);border-radius:50%}
+.pf-photo-card::after{content:'';position:absolute;bottom:-60px;left:-30px;width:180px;height:180px;background:rgba(255,255,255,.05);border-radius:50%}
+.pf-photo{width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;margin:0 auto .75rem;border:3px solid rgba(255,255,255,.3);position:relative;z-index:1}
+.pf-emoji{font-size:42px;line-height:1}
+.pf-name{font-size:1.125rem;font-weight:700;margin-bottom:.25rem;position:relative;z-index:1}
+.pf-id{font-size:.75rem;opacity:.9;font-family:monospace;margin-bottom:.5rem;position:relative;z-index:1}
+.pf-batch{display:flex;justify-content:center;gap:.375rem;flex-wrap:wrap;margin-bottom:.75rem;position:relative;z-index:1}
+.pf-batch .badge{background:rgba(255,255,255,.2);color:#fff;font-size:.7rem;border-radius:50px}
+.pf-edit-motivasi{background:rgba(255,255,255,.2)!important;color:#fff!important;border:1px solid rgba(255,255,255,.3)!important;position:relative;z-index:1;border-radius:20px!important}
+.pf-motivasi{background:rgba(255,255,255,.15);border-radius:10px;padding:.625rem .75rem;margin-top:.625rem;font-size:.8125rem;line-height:1.5;font-style:italic;position:relative;z-index:1}
+.pf-motivasi-empty{opacity:.75;font-style:italic}
+.pf-info-card{background:#fff;border:1px solid var(--wa-border);border-radius:16px;padding:1rem;margin-bottom:.75rem;box-shadow:0 1px 3px rgba(17,27,33,.04)}
+.pf-section-title{display:flex;align-items:center;gap:.375rem;font-size:.875rem;font-weight:700;color:var(--wa-primary);margin-bottom:.625rem;padding-bottom:.5rem;border-bottom:1px solid var(--wa-border)}
+.pf-section-title .material-icons{font-size:18px}
+.pf-info-row{display:flex;justify-content:space-between;align-items:flex-start;gap:.75rem;padding:.5rem 0;border-bottom:1px dashed #F0F2F5;font-size:.8125rem}
+.pf-info-row:last-child{border-bottom:none}
+.pf-info-label{display:flex;align-items:center;gap:.375rem;color:var(--wa-text-secondary);flex-shrink:0;font-weight:500}
+.pf-info-label .material-icons{font-size:16px;color:var(--wa-icon-muted)}
+.pf-info-value{color:var(--wa-text);font-weight:600;text-align:right;flex:1;min-width:0;word-break:break-word}
+.pf-actions{display:grid;gap:.5rem;margin:.5rem 0}
+.pf-actions .btn{border-radius:24px}
+.pf-logout-wrap{margin-top:.75rem;padding-top:.75rem;border-top:1px solid var(--wa-border)}
+.pf-logout-btn{background:var(--wa-danger);color:#fff;font-weight:600;padding:.875rem 1rem;justify-content:center;border-radius:24px}
+.pf-logout-btn:hover{background:#D93F4E}
+
+.riwayat-item{background:#fff;border:1px solid var(--wa-border);border-radius:14px;padding:.875rem;margin-bottom:.5rem;display:flex;justify-content:space-between;align-items:center;gap:.75rem;box-shadow:0 1px 3px rgba(17,27,33,.04);transition:all .15s}
+.riwayat-item:hover{box-shadow:0 3px 10px rgba(17,27,33,.08)}
+.riwayat-main{flex:1;min-width:0}
+.riwayat-title{font-size:.875rem;font-weight:600;color:var(--wa-text);margin-bottom:.25rem;display:flex;align-items:center;gap:.375rem}
+.riwayat-meta{display:flex;gap:.625rem;font-size:.7rem;color:var(--wa-text-secondary);flex-wrap:wrap}
+.riwayat-meta span{display:flex;align-items:center;gap:.2rem}
+.riwayat-meta .material-icons{font-size:12px}
+.nilai-table{width:100%;background:#fff;border:1px solid var(--wa-border);border-radius:14px;overflow:hidden;border-collapse:separate;border-spacing:0;font-size:.8125rem;box-shadow:0 1px 3px rgba(17,27,33,.04)}
+.nilai-table th{background:var(--wa-bg-app);padding:.625rem .75rem;text-align:left;font-weight:600;color:var(--wa-text-secondary);font-size:.7rem;text-transform:uppercase;letter-spacing:.3px;border-bottom:1px solid var(--wa-border)}
+.nilai-table td{padding:.75rem .75rem;border-bottom:1px solid #F0F2F5;color:var(--wa-text)}
+.nilai-table tbody tr:last-child td{border-bottom:none}
+.nilai-score{font-weight:700;font-size:1rem;color:var(--wa-primary)}
+.nilai-score.high{color:#25D366}
+.nilai-score.low{color:var(--wa-danger)}
+
+@media (max-width:400px){
+  .mini-grid{gap:.375rem}
+  .mini-card{padding:.625rem .375rem}
+  .mini-value{font-size:1.25rem}
+  .mini-label{font-size:.5625rem}
+  .bn-item{font-size:.5625rem}
+  .bn-item .material-icons{font-size:20px}
+}
+@media (min-width:768px){
+  .mini-grid{grid-template-columns:repeat(3,1fr);max-width:600px;margin-left:auto;margin-right:auto}
+  .tab-page{padding:1rem 1.5rem}
+  .pf-photo-card{max-width:600px;margin-left:auto;margin-right:auto}
+}
+
+/* =========================================================================
+   v2.4 - MODE HOMEWORK (PR) — dipertahankan (warna kuning)
+   ========================================================================= */
+.mode-badge-live{display:inline-flex;align-items:center;gap:.25rem;background:var(--wa-primary-soft);color:var(--wa-primary-dark);padding:.25rem .75rem;border-radius:50px;font-size:.7rem;font-weight:700}
+.mode-badge-live .material-icons{font-size:14px}
+.mode-badge-hw{display:inline-flex;align-items:center;gap:.25rem;background:#FFF3CD;color:#8A6D3B;padding:.25rem .75rem;border-radius:50px;font-size:.7rem;font-weight:700}
+.mode-badge-hw .material-icons{font-size:14px}
+
+.hw-card{background:linear-gradient(135deg,#FFF9E6,#FFF3CD);border:2px solid #FFA726;border-radius:16px;padding:1rem;margin-bottom:.75rem;cursor:pointer;transition:all .2s;box-shadow:0 1px 4px rgba(255,167,38,.15)}
+.hw-card:hover{box-shadow:0 4px 14px rgba(255,167,38,.25);transform:translateY(-2px)}
+.hw-card.disabled{opacity:.6;cursor:not-allowed;transform:none;box-shadow:none}
+.hw-card-head{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.5rem}
+.hw-card-title{font-weight:700;font-size:.9375rem;color:#8A6D3B;display:flex;align-items:center;gap:.5rem}
+.hw-card-title .material-icons{color:#FFA726}
+.hw-card-meta{display:flex;gap:.75rem;font-size:.75rem;color:#6B5419;flex-wrap:wrap;margin-bottom:.5rem}
+.hw-card-meta span{display:flex;align-items:center;gap:.25rem}
+.hw-card-meta .material-icons{font-size:14px}
+
+.hw-deadline{display:flex;align-items:center;gap:.375rem;font-size:.75rem;font-weight:600;color:#8A6D3B;background:#fff;border:1px solid #FFA726;border-radius:20px;padding:.375rem .75rem}
+.hw-deadline .material-icons{font-size:16px;color:#FFA726}
+.hw-deadline.urgent{background:#FFE5E5;border-color:var(--wa-danger);color:#C62828;animation:pulse 1.5s infinite}
+.hw-deadline.urgent .material-icons{color:var(--wa-danger)}
+
+.hw-progress{height:8px;background:#E9EDEF;border-radius:4px;overflow:hidden;margin:.5rem 0}
+.hw-progress-fill{height:100%;background:linear-gradient(90deg,#FFA726,#25D366);border-radius:4px;transition:width .4s ease}
+
+.hw-fb-benar,.hw-fb-salah{display:flex;align-items:center;gap:.5rem;padding:.75rem 1rem;border-radius:14px;font-weight:700;font-size:.875rem;margin-top:.75rem;animation:hwPop .3s ease}
+.hw-fb-benar{background:#DCF8C6;color:#1D6F42;border:2px solid #25D366}
+.hw-fb-salah{background:#FFE5E5;color:#C62828;border:2px solid var(--wa-danger)}
+.hw-fb-benar .material-icons,.hw-fb-salah .material-icons{font-size:20px}
+.hw-fb-pembahasan{margin-top:.5rem;padding:.75rem;background:var(--wa-bg-app);border-left:3px solid var(--wa-primary);border-radius:8px;font-size:.8125rem;color:var(--wa-text);line-height:1.6}
+@keyframes hwPop{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+
+.hw-retry-badge{display:inline-flex;align-items:center;gap:.25rem;background:#FFF3CD;color:#8A6D3B;border:1px solid #FFA726;padding:.25rem .75rem;border-radius:50px;font-size:.7rem;font-weight:700}
+.hw-retry-badge .material-icons{font-size:14px}
+.hw-retry-badge.used{background:#F0F2F5;color:var(--wa-text-secondary);border-color:var(--wa-border)}
+
+.option-item.hw-correct{border-color:#25D366;background:#DCF8C6}
+.option-item.hw-wrong{border-color:var(--wa-danger);background:#FFE5E5}
+
+/* =========================================================================
+   v2.5 - LOADING SPINNER WHATSAPP STYLE
+   (untuk menggantikan loading default g.css bila perlu)
+   ========================================================================= */
+.wa-spinner{display:inline-block;width:36px;height:36px;border:3px solid rgba(0,168,132,.15);border-top-color:var(--wa-primary);border-right-color:var(--wa-primary);border-radius:50%;animation:waSpin .8s linear infinite}
+.wa-spinner.large{width:52px;height:52px;border-width:4px}
+.wa-spinner.small{width:20px;height:20px;border-width:2px}
+@keyframes waSpin{to{transform:rotate(360deg)}}
+
+.wa-loading-wrap{position:fixed;inset:0;background:rgba(17,27,33,.4);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;z-index:9999;color:#fff;font-weight:600;font-size:.875rem}
+.wa-loading-wrap .wa-spinner{border-color:rgba(255,255,255,.2);border-top-color:#fff;border-right-color:#fff}
+
+/* =========================================================================
+   v2.5 - MODAL OVERRIDE (WhatsApp style)
+   Override .modal-overlay & .modal-box dari g.css / modal.js
+   ========================================================================= */
+.modal-overlay{background:rgba(17,27,33,.55)!important;backdrop-filter:blur(6px)!important;-webkit-backdrop-filter:blur(6px)!important;animation:waFadeIn .2s ease!important}
+.modal-box{background:#fff!important;border-radius:20px!important;border:none!important;box-shadow:0 20px 60px rgba(17,27,33,.25)!important;max-width:400px!important;margin:1rem!important;padding:0!important;overflow:hidden!important;animation:waModalIn .25s ease!important}
+.modal-header{background:linear-gradient(135deg,#00A884,#008069)!important;color:#fff!important;padding:1.25rem 1.5rem!important;border-bottom:none!important;display:flex!important;align-items:center!important;gap:.625rem!important}
+.modal-icon{color:#fff!important;background:rgba(255,255,255,.2)!important;border-radius:50%!important;width:40px!important;height:40px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important}
+.modal-title{color:#fff!important;font-size:1.125rem!important;font-weight:700!important;margin:0!important}
+.modal-content{padding:1.25rem 1.5rem!important;color:var(--wa-text)!important;font-size:.9375rem!important;line-height:1.6!important}
+.modal-message{color:var(--wa-text)!important}
+.modal-actions{padding:0 1.5rem 1.5rem!important;gap:.5rem!important;display:flex!important;flex-wrap:wrap!important}
+.modal-actions .btn{flex:1!important;border-radius:24px!important;padding:.75rem 1.25rem!important;font-weight:600!important;font-size:.875rem!important;min-width:0!important}
+.modal-actions .btn-primary{background:var(--wa-primary)!important;color:#fff!important;border:none!important}
+.modal-actions .btn-primary:hover{background:var(--wa-primary-dark)!important}
+.modal-actions .btn-secondary{background:#F0F2F5!important;color:var(--wa-text)!important;border:none!important}
+.modal-actions .btn-secondary:hover{background:#E9EDEF!important}
+.modal-actions .btn-warning{background:#FFA726!important;color:#fff!important;border:none!important}
+.modal-actions .btn-warning:hover{background:#F57C00!important}
+.modal-actions .btn-success{background:#25D366!important;color:#fff!important;border:none!important}
+.modal-actions .btn-danger{background:var(--wa-danger)!important;color:#fff!important;border:none!important}
+@keyframes waFadeIn{from{opacity:0}to{opacity:1}}
+@keyframes waModalIn{from{opacity:0;transform:scale(.9) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
+
+/* =========================================================================
+   v2.5 - TOAST OVERRIDE (WhatsApp snackbar style)
+   ========================================================================= */
+.toast{background:var(--wa-text)!important;color:#fff!important;padding:.75rem 1.25rem!important;border-radius:24px!important;font-size:.875rem!important;font-weight:500!important;box-shadow:0 8px 24px rgba(17,27,33,.25)!important;max-width:80vw!important;text-align:center!important;border:none!important}
+.toast.success{background:#25D366!important}
+.toast.error{background:var(--wa-danger)!important}
+.toast.warning{background:#FFA726!important;color:#fff!important}
+.toast.info{background:var(--wa-info)!important}
+
+/* =========================================================================
+   v2.5 - EMPTY STATE WhatsApp style
+   ========================================================================= */
+.empty-state{padding:2.5rem 1rem!important;text-align:center;color:var(--wa-text-secondary)!important}
+.empty-state .material-icons{font-size:56px!important;color:#DADDE0!important;margin-bottom:.75rem!important;display:block}
+.empty-state p{color:var(--wa-text-secondary)!important;font-size:.875rem!important;margin:0!important;line-height:1.5!important}
+
+/* =========================================================================
+   v2.5 - BADGE GENERIC (WhatsApp colors)
+   ========================================================================= */
+.badge{display:inline-flex;align-items:center;gap:.25rem;padding:.2rem .625rem;border-radius:50px;font-size:.7rem;font-weight:600}
+.badge-info{background:var(--wa-primary-soft);color:var(--wa-primary-dark)}
+.badge-success{background:#DCF8C6;color:#1D6F42}
+.badge-warning{background:#FFF3CD;color:#8A6D3B}
+.badge-error{background:#FFE5E5;color:#C62828}
+
+/* =========================================================================
+   v2.5 - GLOBAL BUTTON PILL SHAPE OVERRIDE
+   Override .btn dari g.css agar semua tombol jadi pill
+   ========================================================================= */
+.btn{border-radius:24px!important;font-weight:600!important;transition:all .15s!important;border:none!important;padding:.625rem 1.25rem!important}
+.btn:active{transform:scale(.97)!important}
+.btn-sm{padding:.375rem .875rem!important;font-size:.8125rem!important;border-radius:20px!important}
+.btn-primary{background:var(--wa-primary)!important;color:#fff!important}
+.btn-primary:hover{background:var(--wa-primary-dark)!important}
+.btn-secondary{background:#F0F2F5!important;color:var(--wa-text)!important}
+.btn-secondary:hover{background:#E9EDEF!important}
+.btn-success{background:#25D366!important;color:#fff!important}
+.btn-warning{background:#FFA726!important;color:#fff!important}
+.btn-danger{background:var(--wa-danger)!important;color:#fff!important}
+.btn.w-full{width:100%!important}
+
+/* =========================================================================
+   v2.5 - FORM CONTROL
+   ========================================================================= */
+.form-control{border:1.5px solid var(--wa-border)!important;border-radius:12px!important;padding:.75rem .875rem!important;background:#fff!important;color:var(--wa-text)!important;font-size:.9375rem!important;transition:all .15s!important}
+.form-control:focus{outline:none!important;border-color:var(--wa-primary)!important;box-shadow:0 0 0 3px rgba(0,168,132,.15)!important}
+.form-label{color:var(--wa-text)!important;font-weight:600!important;font-size:.8125rem!important;margin-bottom:.375rem!important}
+.form-label .material-icons{color:var(--wa-primary)!important;font-size:16px;vertical-align:-3px}
+
+/* =========================================================================
+   v2.5 - HEADER OVERRIDE (WhatsApp style header)
+   ========================================================================= */
+.app-header{background:linear-gradient(135deg,#00A884,#008069)!important;color:#fff!important;border-bottom:none!important;box-shadow:0 2px 8px rgba(0,128,105,.2)!important}
+.header-brand .material-icons{color:#fff!important}
+.header-brand .hb-short,.header-brand .hb-long{color:#fff!important}
+.header-user{color:#fff!important}
+.header-user .material-icons{color:#fff!important}
+.header-name{color:#fff!important}
+
+/* =========================================================================
+   v2.5 - LOGIN PAGE (WhatsApp welcome style)
+   ========================================================================= */
+.login-page{background:linear-gradient(135deg,#00A884 0%,#008069 100%)!important}
+.login-card{background:#fff!important;border-radius:24px!important;box-shadow:0 20px 60px rgba(17,27,33,.3)!important;border:none!important;overflow:hidden!important}
+.login-logo{background:linear-gradient(135deg,#00A884,#008069)!important;color:#fff!important}
+.login-logo .material-icons{color:#fff!important}
+.login-logo h1{color:#fff!important}
+.login-logo p{color:rgba(255,255,255,.9)!important}
+.login-footer{background:#F0F2F5!important;color:var(--wa-text-secondary)!important}
+.login-footer p{color:var(--wa-text-secondary)!important}
+.err{background:#FFE5E5!important;color:#C62828!important;border-radius:10px!important}
+
+/* =========================================================================
+   v2.5 - PULSE ANIMATION (untuk urgent)
+   ========================================================================= */
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.85;transform:scale(1.02)}}
+
+/* =========================================================================
+   v2.5 - QUESTION TYPE BADGE (WhatsApp style)
+   ========================================================================= */
+.question-type-badge{display:inline-flex;align-items:center;padding:.125rem .5rem;border-radius:50px;font-size:.65rem;font-weight:600;margin-left:.375rem;vertical-align:middle}
+.question-type-badge.pgs{background:var(--wa-primary-soft);color:var(--wa-primary-dark)}
+.question-type-badge.mcma{background:#DCF8C6;color:#1D6F42}
+.question-type-badge.pgk{background:#FFF3CD;color:#8A6D3B}
+.question-type-badge.isian{background:#E7F3FE;color:#0277BD}
+
+/* ---------- 4. MODAL: lebih LEBAR + bisa di-SCROLL (v2.7 fix modal hantu) ---------- */
+/* Base: JANGAN paksa display di sini, biar inline display:none tetap menang saat tertutup */
+.modal-overlay{
+  overflow-y:auto!important;
+  padding:1rem!important;
+}
+/* Center HANYA saat overlay sedang dibuka (inline display != none) */
+.modal-overlay:not([style*="none"]){
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+}
+.modal-box{
+  width:94vw!important;
+  max-width:min(560px,94vw)!important;
+  max-height:90vh!important;
+  display:flex!important;
+  flex-direction:column!important;
+  margin:0!important;
+}
+.modal-header{flex:0 0 auto!important}
+.modal-content{
+  overflow-y:auto!important;
+  flex:1 1 auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  -webkit-overflow-scrolling:touch!important;
+}
+.modal-actions{flex:0 0 auto!important}
+
+/* =========================================================================
+   v2.9 - HEADER v4.7: nickname + status online/offline di sDateLine
+   (append di akhir s.css — jangan replace)
+   ========================================================================= */
+
+/* Header user: dua baris (nickname di atas, ID+nama di bawah) */
+.header-user{
+  display:flex!important;
+  align-items:center!important;
+  gap:.5rem!important;
+}
+.header-user-text{
+  display:flex;
+  flex-direction:column;
+  line-height:1.2;
+  align-items:flex-start;
+}
+.s-user-nickname{
+  font-size:.6875rem;
+  font-weight:500;
+  opacity:.92;
+  color:#fff;
+  letter-spacing:.2px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:180px;
+}
+.s-user-idline{
+  display:flex;
+  align-items:center;
+  gap:.375rem;
+  font-size:.8125rem;
+  white-space:nowrap;
+}
+.s-user-idline strong{
+  font-family:monospace;
+  font-weight:700;
+  color:#fff;
+  letter-spacing:.3px;
+}
+.s-user-idline .header-name{
+  font-size:.75rem;
+  opacity:.88;
+  color:#fff;
+  font-weight:500;
+  max-width:120px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+/* sDateLine: flex — jam kiri, status indicator kanan mepet */
+.s-date-line{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:.5rem!important;
+  padding:.5rem 1rem!important;
+  background:#fff!important;
+  border-bottom:1px solid #E9EDEF!important;
+}
+.sdl-left{
+  display:flex;
+  align-items:center;
+  gap:.375rem;
+  font-size:.8125rem;
+  color:#667781;
+  flex:1;
+  min-width:0;
+  overflow:hidden;
+}
+.sdl-left .material-icons{
+  font-size:14px;
+  color:#00A884;
+  flex-shrink:0;
+}
+.sdl-left #sClockText{
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  letter-spacing:.2px;
+}
+
+/* Status indicator (kanan mepet) */
+.sdl-right{
+  flex:0 0 auto;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+}
+.conn-status{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:2px;
+  padding:2px 6px;
+  border-radius:10px;
+  background:#F0F2F5;
+  min-width:46px;
+}
+.conn-indicator{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:22px;
+  height:22px;
+  position:relative;
+}
+.conn-radar{
+  display:block;
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  background:#AAB4BD;
+  position:relative;
+  transition:background .2s;
+}
+.conn-radar.online{
+  background:#25D366;
+  box-shadow:0 0 0 0 rgba(37,211,102,.6);
+  animation:connRadarPulse 1.6s ease-out infinite;
+}
+.conn-radar.offline{
+  background:#F15C6D;
+  animation:connBlink 1s ease-in-out infinite;
+}
+@keyframes connRadarPulse{
+  0%{box-shadow:0 0 0 0 rgba(37,211,102,.6);}
+  70%{box-shadow:0 0 0 8px rgba(37,211,102,0);}
+  100%{box-shadow:0 0 0 0 rgba(37,211,102,0);}
+}
+@keyframes connBlink{
+  0%,100%{opacity:1;}
+  50%{opacity:.3;}
+}
+.conn-label{
+  font-size:.5625rem;
+  font-weight:700;
+  letter-spacing:.3px;
+  text-transform:uppercase;
+  color:#667781;
+  line-height:1;
+}
+
+@media (max-width:380px){
+  .s-user-idline .header-name{display:none}
+  .sdl-left #sClockText{font-size:.75rem;}
+}
+/* =========================================================================
+   v2.10 - FIX BUG: icon login pudar & header user pill tidak terbaca
+   (append di akhir s.css — jangan replace)
+   ========================================================================= */
+
+/* ---------- FIX 1: Login logo icon ----------
+   Icon school sebelumnya putih di atas lingkaran putih = tidak terlihat.
+   Kini hijau teal agar kontras di atas lingkaran putih. */
+.login-logo .material-icons,
+.login-logo span.material-icons{
+  color:#00A884 !important;
+  text-shadow:none !important;
+  opacity:1 !important;
+}
+/* Pastikan lingkaran di login-logo tetap putih bersih */
+.login-logo{
+  position:relative;
+}
+.login-logo .material-icons{
+  background:#fff !important;
+  border-radius:50% !important;
+  width:72px !important;
+  height:72px !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  font-size:36px !important;
+  margin:0 auto .75rem !important;
+  box-shadow:0 4px 14px rgba(0,0,0,.12) !important;
+}
+
+/* ---------- FIX 2: Header user pill ----------
+   Pill background putih solid, tapi teks & icon sebelumnya putih = tidak
+   terbaca. Kini teks & icon hijau gelap agar kontras di atas putih. */
+.app-header .header-user{
+  background:#fff !important;
+  border:1px solid rgba(0,168,132,.35) !important;
+  border-radius:14px !important;
+  padding:.375rem .75rem !important;
+  box-shadow:0 2px 8px rgba(0,0,0,.08) !important;
+}
+.app-header .header-user > .material-icons,
+.app-header .header-user .material-icons{
+  color:#00A884 !important;
+  opacity:1 !important;
+}
+.app-header .header-user .s-user-nickname,
+.app-header .header-user #sUserNickname{
+  color:#008069 !important;
+  opacity:1 !important;
+  font-weight:600 !important;
+}
+.app-header .header-user .s-user-idline,
+.app-header .header-user .s-user-idline strong,
+.app-header .header-user #sUserId{
+  color:#008069 !important;
+  opacity:1 !important;
+}
+.app-header .header-user .header-name,
+.app-header .header-user #sUserName{
+  color:#008069 !important;
+  opacity:.85 !important;
+}
+
+/* ---------- Pastikan label form login icon hijau ---------- */
+.login-page .form-label .material-icons,
+.login-page label .material-icons{
+  color:#00A884 !important;
+}
+
+/* =========================================================================
+   v2.11 (cache-bust ?v=14) - NAV 7 KOLOM PERMANEN + STYLE MODUL LEARN
+   (append di akhir s.css — jangan replace)
+   ========================================================================= */
+
+/* ---------- 1. Bottom nav utama: 7 kolom (tombol Learn permanen) ---------- */
+.bottom-nav-tabs{grid-template-columns:repeat(7,1fr);}
+@media (max-width:400px){
+  .bn-item{font-size:.5625rem;}
+  .bn-item .material-icons{font-size:19px;}
+}
+
+/* ---------- 2. Overlay halaman Learn ---------- */
+.ln-page{position:fixed;inset:0;z-index:250;background:var(--wa-bg-app);display:none;overflow-y:auto;}
+.ln-page.open{display:block;}
+.ln-hd{position:sticky;top:0;z-index:30;background:linear-gradient(135deg,#00A884,#008069);color:#fff;padding:.625rem .75rem;display:flex;align-items:center;gap:.5rem;box-shadow:0 2px 8px rgba(0,128,105,.2);}
+.ln-hd .ln-back{background:rgba(255,255,255,.18);border:none;color:#fff;border-radius:10px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.ln-hd .ln-back .material-icons{font-size:20px;}
+.ln-hd b{flex:1;font-size:1rem;font-weight:700;}
+.ln-hd .ln-sid{font-size:.6875rem;opacity:.9;font-family:monospace;}
+
+/* ---------- 3. Bottom-nav internal Learn (3 tab) ---------- */
+.ln-bnav{position:fixed;left:0;right:0;bottom:0;z-index:31;background:#fff;border-top:1px solid var(--wa-border);display:grid;grid-template-columns:repeat(3,1fr);padding:.375rem 0 calc(.5rem + env(safe-area-inset-bottom));box-shadow:0 -2px 10px rgba(17,27,33,.05);}
+.ln-bn{display:flex;flex-direction:column;align-items:center;gap:.125rem;padding:.375rem .25rem;background:transparent;border:none;cursor:pointer;color:var(--wa-icon-muted);font-size:.625rem;font-weight:600;font-family:inherit;position:relative;}
+.ln-bn .material-icons{font-size:22px;}
+.ln-bn.active{color:var(--wa-primary);}
+.ln-bn.active::before{content:'';position:absolute;top:0;left:25%;right:25%;height:3px;background:var(--wa-primary);border-radius:0 0 3px 3px;}
+
+/* ---------- 4. Konten Learn ---------- */
+.ln-wrap{max-width:720px;margin:0 auto;padding:.75rem .75rem calc(4.5rem + env(safe-area-inset-bottom));}
+.ln-chips{display:flex;gap:.375rem;flex-wrap:wrap;margin:.5rem 0;}
+.ln-chip{padding:.4375rem .75rem;border-radius:50px;border:1px solid var(--wa-border);background:#fff;font-size:.75rem;font-weight:700;color:var(--wa-text-secondary);cursor:pointer;font-family:inherit;}
+.ln-chip.on{background:var(--wa-primary);border-color:var(--wa-primary);color:#fff;}
+.ln-grp{font-size:.6875rem;font-weight:800;color:var(--wa-text-secondary);text-transform:uppercase;letter-spacing:.04em;margin:.75rem 0 .375rem;}
+.ln-card{background:#fff;border:1px solid var(--wa-border);border-radius:14px;padding:.375rem .75rem;margin-bottom:.625rem;box-shadow:0 1px 3px rgba(17,27,33,.04);}
+.ln-card.pad{padding:.875rem;}
+.ln-row{display:flex;align-items:center;gap:.5rem;padding:.625rem .125rem;border-top:1px solid var(--wa-border);cursor:pointer;}
+.ln-row:first-child{border-top:none;}
+.ln-row .no{font-size:.6875rem;font-weight:800;color:var(--wa-text-secondary);font-family:monospace;flex:0 0 auto;}
+.ln-row .ln-ic{font-size:18px;flex:0 0 auto;}
+.ln-row .ti{flex:1;min-width:0;}
+.ln-row .ti b{display:block;font-size:.8125rem;color:var(--wa-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ln-row .ti span{display:block;font-size:.6875rem;color:var(--wa-text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ln-st{font-size:.5625rem;font-weight:900;border-radius:50px;padding:.1875rem .4375rem;letter-spacing:.04em;flex:0 0 auto;}
+.ln-st.locked{background:#F0F2F5;color:var(--wa-text-secondary);}
+.ln-st.wait{background:#FFF3CD;color:#8A6D3B;}
+.ln-st.open{background:var(--wa-primary-soft);color:var(--wa-primary-dark);}
+.ln-st.done{background:#DCF8C6;color:#1D6F42;}
+.ln-badge{display:inline-flex;align-items:center;gap:.25rem;font-size:.5625rem;font-weight:800;border-radius:50px;padding:.1875rem .4375rem;background:var(--wa-primary-soft);color:var(--wa-primary-dark);}
+.ln-badge.off{background:#F0F2F5;color:var(--wa-text-secondary);}
+.ln-badge.score{background:#E7F3FE;color:#0277BD;}
+
+/* ---------- 5. Theory / words / quiz di dalam materi ---------- */
+.ln-sec{margin:.625rem 0;}
+.ln-sec h5{margin:0 0 .25rem;font-size:.8125rem;font-weight:700;color:var(--wa-primary-dark);}
+.ln-sec p{margin:0 0 .375rem;font-size:.78125rem;line-height:1.55;color:var(--wa-text);}
+.ln-sec ul{margin:0;padding-left:1.125rem;font-size:.78125rem;line-height:1.6;color:var(--wa-text);}
+.ln-w{border:1px solid var(--wa-border);border-radius:10px;padding:.5rem .625rem;margin-bottom:.375rem;font-size:.8125rem;cursor:pointer;background:#fff;color:var(--wa-text);}
+.ln-w .id{display:none;color:var(--wa-primary-dark);font-weight:700;margin-top:.125rem;}
+.ln-w.show .id{display:block;}
+.ln-q{display:block;width:100%;text-align:left;padding:.625rem .75rem;margin-bottom:.375rem;border:2px solid var(--wa-border);border-radius:12px;background:#fff;font:inherit;font-size:.8125rem;font-weight:600;cursor:pointer;color:var(--wa-text);}
+.ln-q.ok{background:#DCF8C6;border-color:#25D366;}
+.ln-q.bad{background:#FFE5E5;border-color:var(--wa-danger);}
+.ln-btn{width:100%;padding:.6875rem;border:none;border-radius:24px;background:var(--wa-primary);color:#fff;font:inherit;font-weight:700;font-size:.8125rem;cursor:pointer;margin-top:.5rem;}
+.ln-btn:hover{background:var(--wa-primary-dark);}
+.ln-btn.sec{background:#F0F2F5;color:var(--wa-text);}
+.ln-btn.warn{background:#FFA726;color:#fff;}
+.ln-ta{width:100%;min-height:120px;padding:.625rem .75rem;border:1.5px solid var(--wa-border);border-radius:12px;font:inherit;font-size:.8125rem;background:#fff;color:var(--wa-text);resize:vertical;}
+.ln-ta:focus{outline:none;border-color:var(--wa-primary);box-shadow:0 0 0 3px rgba(0,168,132,.15);}
+.ln-note{background:#FFF9E6;border:1px solid #FFA726;border-radius:12px;padding:.625rem .75rem;font-size:.78125rem;color:#6B5419;line-height:1.5;margin-bottom:.625rem;white-space:pre-wrap;}
+.ln-sched{display:inline-flex;align-items:center;gap:.375rem;font-size:.6875rem;font-weight:700;color:var(--wa-primary-dark);background:var(--wa-primary-soft);border-radius:50px;padding:.25rem .625rem;margin-bottom:.5rem;}
+.ln-sched .material-icons{font-size:14px;}
+.ln-score{text-align:center;font-size:2rem;font-weight:800;color:var(--wa-primary);margin:.5rem 0;}
+.ln-score-sub{text-align:center;font-size:.75rem;color:var(--wa-text-secondary);margin-bottom:.5rem;}
+
+/* ---------- 6. Grid game Fun Learn ---------- */
+.ln-games{display:grid;grid-template-columns:repeat(2,1fr);gap:.625rem;}
+.ln-game{background:#fff;border:1px solid var(--wa-border);border-radius:16px;padding:.875rem .75rem;text-align:center;cursor:pointer;transition:transform .15s;box-shadow:0 1px 3px rgba(17,27,33,.04);}
+.ln-game:active{transform:scale(.97);}
+.ln-game.disabled{opacity:.55;cursor:not-allowed;}
+.ln-game .material-icons{font-size:28px;color:var(--wa-primary);}
+.ln-game b{display:block;font-size:.8125rem;margin:.375rem 0 .125rem;color:var(--wa-text);}
+.ln-game span{font-size:.625rem;color:var(--wa-text-secondary);}
+
+/* ---------- 7. Game Connect (pasangkan EN-ID) ---------- */
+.cn-cols{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;}
+.cn-item{padding:.625rem .5rem;border:2px solid var(--wa-border);border-radius:12px;background:#fff;font-size:.78125rem;font-weight:600;text-align:center;cursor:pointer;color:var(--wa-text);margin-bottom:.375rem;}
+.cn-item.sel{border-color:var(--wa-primary);background:var(--wa-primary-soft);}
+.cn-item.matched{border-color:#25D366;background:#DCF8C6;cursor:default;opacity:.75;}
+.cn-item.wrong{border-color:var(--wa-danger);background:#FFE5E5;animation:hwPop .3s ease;}
+
+/* ---------- 8. Game Drag & Drop (lengkapi kalimat) ---------- */
+.dnd-bank{display:flex;flex-wrap:wrap;gap:.375rem;margin:.5rem 0;}
+.dnd-chip{padding:.4375rem .75rem;border:2px solid var(--wa-primary);background:var(--wa-primary-soft);color:var(--wa-primary-dark);border-radius:50px;font-size:.75rem;font-weight:700;cursor:pointer;}
+.dnd-chip.used{opacity:.35;cursor:not-allowed;border-color:var(--wa-border);background:#F0F2F5;color:var(--wa-text-secondary);}
+.dnd-sent{font-size:.875rem;line-height:2;color:var(--wa-text);}
+.dnd-slot{display:inline-block;min-width:80px;border-bottom:2px dashed var(--wa-primary);text-align:center;padding:0 .375rem;font-weight:700;color:var(--wa-primary-dark);cursor:pointer;}
+.dnd-slot.filled{border-bottom-style:solid;background:var(--wa-primary-soft);border-radius:8px;}
+.dnd-slot.wrong{border-bottom-color:var(--wa-danger);background:#FFE5E5;color:#C62828;}
+
+/* ---------- 9. Game True / False ---------- */
+.tf-btns{display:grid;grid-template-columns:1fr 1fr;gap:.625rem;margin-top:.75rem;}
+.tf-btn{padding:1rem;border:2px solid var(--wa-border);border-radius:16px;background:#fff;font:inherit;font-size:1rem;font-weight:800;cursor:pointer;color:var(--wa-text);}
+.tf-btn.true{border-color:#25D366;background:#DCF8C6;color:#1D6F42;}
+.tf-btn.false{border-color:var(--wa-danger);background:#FFE5E5;color:#C62828;}
+.tf-btn:active{transform:scale(.97);}
