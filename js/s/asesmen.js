@@ -31,7 +31,10 @@
   }
   function assigned(session){
     var ids=session.assignedStudents;
-    return !ids || !ids.length || ids.some(function(id){return String(id).trim()===String(PS.user&&PS.user.id||'').trim();});
+    var studentId=PS.user&&PS.user.id;
+    return Array.isArray(ids)&&ids.length>0&&studentId!=null&&ids.some(function(id){
+      return String(id).trim()===String(studentId).trim();
+    });
   }
   function attemptsFor(sessionId){
     return (PS.myAttempts||[]).filter(function(attempt){ return attempt.sessionId===sessionId; });
