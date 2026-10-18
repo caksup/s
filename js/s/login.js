@@ -148,18 +148,25 @@
     renderHeader(user);
     await loadProfileExtended();
 
-    try{
-      var snap = await db.collection('attempts').where('studentId','==',user.id).get();
-      var inc = null;
-      snap.forEach(function(d){
-        var a = d.data();
-        if (a.status === 'in_progress') inc = { id: d.id, data: a };
-      });
-      if (inc && inc.data.sessionId && window.autoResume) {
-        await window.autoResume(inc.data.sessionId);
-        return;
-      }
-    }catch(e){ console.warn('[PS] cek resume gagal:', e); }
+    var hasSessionLink = false;
+    try {
+      var params = new URLSearchParams(location.search);
+      hasSessionLink = !!(params.get('jecact') || params.get('jec-sim-tka'));
+    } catch(e){ console.warn('[PS] Parameter link sesi tidak dapat dibaca:', e); }
+    if (!hasSessionLink) {
+      try{
+        var snap = await db.collection('attempts').where('studentId','==',user.id).get();
+        var inc = null;
+        snap.forEach(function(d){
+          var a = d.data();
+          if (a.status === 'in_progress') inc = { id: d.id, data: a };
+        });
+        if (inc && inc.data.sessionId && window.autoResume) {
+          await window.autoResume(inc.data.sessionId);
+          return;
+        }
+      }catch(e){ console.warn('[PS] cek resume gagal:', e); }
+    }
 
     await showDashboard();
   }
