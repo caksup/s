@@ -6,7 +6,7 @@
     dashboard.js v2.6 yang sudah menyembunyikan tombol "Mulai" untuk realtime.
   * TAMBAH guard di autoResume(): bila mode realtime, jangan auto-resume test biasa.
   * TAMBAH guard di initTest(): defense in depth — bila somehow berhasil lewat
-    layer 1 & 2 (misal via URL ?jec-sim-tka=), tetap diblokir di sini.
+    layer 1 & 2 (misal via URL ?jecact=), tetap diblokir di sini.
 - TETAP (tidak dipotong dari v2.0): routing cerdas mode HOMEWORK vs LIVE, counter
   pelanggaran, True/False, modal modern, Menu Soal icon-only, assigned-check,
   4 tipe soal, timer, saveRemaining, saveProgress, submitTest, confirmSubmit,
@@ -73,8 +73,9 @@
 
   function isAssigned(sess){
     var arr = sess && sess.assignedStudents;
-    if(!arr || !arr.length) return true;
-    return arr.indexOf(PS.user.id) !== -1;
+    var studentId = PS.user && PS.user.id;
+    if(!Array.isArray(arr) || !arr.length || studentId == null) return false;
+    return arr.some(function(id){ return String(id).trim() === String(studentId).trim(); });
   }
   function blockNotAssigned(){
     alert2('Akses Ditolak',
@@ -85,12 +86,14 @@
   async function startSession(id, status){
     console.log('[TKA] startSession dipanggil, id=', id, 'status=', status);
     if (status === 'locked' || status === 'expired') { toast('Sesi belum/tidak tersedia', 'warning'); return; }
+    var s = PS.sessions.find(function(x){ return x.id === id; });
+    if (!s) { toast('Sesi tidak ditemukan atau sedang tidak tersedia','warning'); return; }
+    if (!isAssigned(s)) { blockNotAssigned(); return; }
     if (status === 'completed') {
       var done = PS.myAttempts.find(function(a){ return a.sessionId === id; });
       if (done) showResultFromAttempt(done.id);
       return;
     }
-    var s = PS.sessions.find(function(x){ return x.id === id; });
     var name = s ? s.name : 'Sesi';
     var dur = s ? (s.duration||60) : 60;
 
@@ -108,8 +111,6 @@
         'info');
       return;
     }
-
-    if (s && !isAssigned(s)) { blockNotAssigned(); return; }
 
     if (s && s.mode === 'homework' && window.startHomework) {
       return window.startHomework(id);
