@@ -99,8 +99,9 @@
   }
   function isAssignedHw(sess){
     var arr = sess && sess.assignedStudents;
-    if(!arr || !arr.length) return true;
-    return arr.indexOf(PS.user.id) !== -1;
+    var studentId = PS.user && PS.user.id;
+    if(!Array.isArray(arr) || !arr.length || studentId == null) return false;
+    return arr.some(function(id){ return String(id).trim() === String(studentId).trim(); });
   }
 
   // ===== START (v1.8: unlimited retake, tanpa syarat nilai) =====
@@ -219,6 +220,11 @@
       var sessSnap = await db.collection('sessions').doc(sid).get();
       if (!sessSnap.exists) { load.close(); alert2('Error','Sesi tidak ditemukan','error'); return; }
       PS.currentSession = Object.assign({id:sid}, sessSnap.data());
+      if (!isAssignedHw(PS.currentSession)) {
+        load.close();
+        alert2('Akses Ditolak','Sesi Homework ini tidak ditugaskan kepada akun Anda.','error');
+        return;
+      }
       PS.questions = await loadQuestionsHw(sid, PS.currentSession);
       if (!PS.questions.length) { load.close(); alert2('Error','Sesi belum punya soal','error'); return; }
 
@@ -247,6 +253,11 @@
       var sessSnap = await db.collection('sessions').doc(sid).get();
       if (!sessSnap.exists) { load.close(); alert2('Error','Sesi tidak ditemukan','error'); return; }
       PS.currentSession = Object.assign({id:sid}, sessSnap.data());
+      if (!isAssignedHw(PS.currentSession)) {
+        load.close();
+        alert2('Akses Ditolak','Sesi Homework ini tidak ditugaskan kepada akun Anda.','error');
+        return;
+      }
       PS.questions = await loadQuestionsHw(sid, PS.currentSession);
 
       var doc = incDoc;
