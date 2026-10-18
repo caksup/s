@@ -1,6 +1,6 @@
-/* s#15 | /root/js/s/dashboard.js | v 2.15 | u 18/09/2026 • 07:30:00 | xu : ke-20 | note : #noteresponse
-- v2.14 -> v2.15 (PR UNLIMITED sesuai keputusan user):
-  * maxAttempts (batas 2) DIHAPUS. Diganti isUnlimited(s):
+/* s#15 | /root/js/s/dashboard.js | v 2.16 | u 18/10/2026 | xu : ke-21 | note : #noteresponse
+- v2.15 -> v2.16 (strict assignment + jecact direct session links):
+  * Aturan percobaan PR memakai isUnlimited(s):
     - retryMode 'once'  -> 1 percobaan (card hilang setelah 1 attempt completed)
     - nilai lain/'free' -> UNLIMITED percobaan s.d. deadline (ala Quizizz)
   * hwPending (aturan tampil):
@@ -11,7 +11,9 @@
   * Card RETAKE (sudah >=1 attempt): info skor terbaik + "Percobaan: N"
     (TANPA pembatas /2) + tombol "Coba Lagi (Percobaan N+1)".
   * Card NORMAL (belum ada attempt): tidak berubah.
-  * TETAP IDENTIK dari v2.14:
+  * Assigned sessions are visible only to explicitly assigned student IDs.
+  * Session links use ?jecact= and enter the selected session lobby directly.
+  * TETAP:
     - detectActiveRooms query SATU 'in' + fallback per-sesi (fix "Menunggu Kode").
     - Auto-poll 20 dtk render ulang section Realtime saja.
     - refreshDashboard (refresh jaringan, spin + toast).
@@ -118,7 +120,7 @@
       PS.sessions = [];
       snap.forEach(function(d){
         var s = Object.assign({id:d.id},d.data());
-        if (s.status !== false && s.visible !== false) PS.sessions.push(s);
+        if (s.deleted !== true && s.status !== false && s.visible !== false) PS.sessions.push(s);
       });
       console.log('[PS] sessions loaded:', PS.sessions.length);
     } catch(e){ console.error('[PS] load sessions error:', e); }
@@ -142,6 +144,12 @@
   function isHw(s){ return s.mode === 'homework'; }
   function isRealtime(s){ return s.mode === 'realtime'; }
   function isAssessment(s){ return s.mode === 'assessment'; }
+  function isAssigned(s){
+    var ids = s && s.assignedStudents;
+    var studentId = PS.user && PS.user.id;
+    if (!Array.isArray(ids) || !ids.length || studentId == null) return false;
+    return ids.some(function(id){ return String(id).trim() === String(studentId).trim(); });
+  }
 
   function hwCompletedAttempts(s){
     return PS.myAttempts.filter(function(a){ return a.sessionId===s.id && a.status==='completed'; });
@@ -150,7 +158,7 @@
     return PS.myAttempts.some(function(a){ return a.sessionId===s.id && a.status==='in_progress'; });
   }
 
-  // v2.15: 'once' = 1x; nilai lain / kosong = free/unlimited s.d. deadline
+  // 'once' = 1x; nilai lain / kosong = free/unlimited s.d. deadline
   function getRetryMode(s){
     if (!s) return 'once';
     if (s.retryMode && typeof s.retryMode === 'string') return s.retryMode;
@@ -174,6 +182,7 @@
   // ATURAN TAMPIL v2.15 (unlimited)
   function hwPending(s){
     if (!isHw(s)) return false;
+    if (!isAssigned(s)) return false;
     if (hwHasInProgress(s)) return true;                 // sedang dikerjakan
     if (hwExpired(s)) return false;                     // deadline lewat -> tutup
     if (!isUnlimited(s)) return hwCompletedAttempts(s).length === 0;  // mode once
@@ -226,23 +235,42 @@
   }
 
   function clearParamOnce(){
-    try { if (location.search && history.replaceState) history.replaceState(null, '', location.pathname); } catch(e){}
+    try {
+      var url = new URL(location.href);
+      url.searchParams.delete('jecact');
+      url.searchParams.delete('jec-sim-tka');
+      history.replaceState(history.state, '', url.pathname + url.search + url.hash);
+    } catch(e){ console.warn('[dash] Gagal menghapus parameter sesi:', e); }
   }
 
   async function handleSessionParam(){
     var code = null;
-    try { code = new URLSearchParams(location.search).get('jec-sim-tka'); } catch(e){}
-    if (!code) return;
-    var sess = PS.sessions.find(function(s){ return (s.code||'').toLowerCase() === code.toLowerCase(); });
-    if (!sess) { toast('Kode sesi tidak ditemukan','warning'); clearParamOnce(); return; }
-    var done = PS.myAttempts.find(function(a){ return a.sessionId===sess.id && a.status==='completed'; });
-    if (done && window.showResultFromAttempt) { showResultFromAttempt(done.id); clearParamOnce(); return; }
     try {
-      var inc = await db.collection('attempts')
-        .where('studentId','==',PS.user.id).where('sessionId','==',sess.id).where('status','==','in_progress').get();
-      if (!inc.empty && window.autoResume) { window.autoResume(sess.id); clearParamOnce(); return; }
-    } catch(e){}
-    try { openStart(sess); clearParamOnce(); } catch(e){}
+      var params = new URLSearchParams(location.search);
+      code = params.get('jecact') || params.get('jec-sim-tka');
+    } catch(e){ console.warn('[dash] Parameter sesi tidak dapat dibaca:', e); }
+    if (!code) return;
+    clearParamOnce();
+    var sess = PS.sessions.find(function(s){ return String(s.code||'').toLowerCase() === String(code).toLowerCase(); });
+    if (!sess) { toast('Sesi tidak ditemukan atau sedang tidak tersedia','warning'); return; }
+    if (!isAssigned(sess)) { toast('Sesi ini tidak ditugaskan kepada akun Anda','error'); return; }
+    var done = PS.myAttempts.find(function(a){ return a.sessionId===sess.id && a.status==='completed'; });
+    if (done) {
+      if (isAssessment(sess) && window.openAssessmentResult) {
+        await window.openAssessmentResult(sess.id, done.id);
+      } else if (window.showResultFromAttempt) {
+        await window.showResultFromAttempt(done.id);
+      }
+      return;
+    }
+    var inProgress = PS.myAttempts.some(function(a){
+      return a.sessionId===sess.id && a.status==='in_progress';
+    });
+    if (inProgress && window.autoResume) {
+      await window.autoResume(sess.id);
+      return;
+    }
+    openStart(sess);
   }
 
   async function loadDashboard(){
@@ -496,9 +524,7 @@
   function rtAssignedSessions(){
     return PS.sessions.filter(function(s){
       if (!isRealtime(s)) return false;
-      var arr = s.assignedStudents;
-      if (!arr || !arr.length) return true;
-      return arr.indexOf(PS.user.id) !== -1;
+      return isAssigned(s);
     });
   }
 
@@ -546,8 +572,10 @@
     }
 
     var hwActive = PS.sessions.filter(hwPending);
-    var assessmentSessions = PS.sessions.filter(isAssessment);
-    var liveSessions = PS.sessions.filter(function(s){ return !isHw(s) && !isRealtime(s) && !isAssessment(s) && !hwExpired(s); });
+    var assessmentSessions = PS.sessions.filter(function(s){ return isAssessment(s) && isAssigned(s); });
+    var liveSessions = PS.sessions.filter(function(s){
+      return !isHw(s) && !isRealtime(s) && !isAssessment(s) && isAssigned(s) && !hwExpired(s);
+    });
     var perlu = liveSessions.filter(function(s){
       var att = PS.myAttempts.find(function(a){ return a.sessionId === s.id; });
       var v = sessionView(s, att);
